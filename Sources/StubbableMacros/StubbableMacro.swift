@@ -38,16 +38,16 @@ public struct StubbableMacro: ExtensionMacro {
             return []
         }
 
-        let ignoredProperties = parseIgnoreParameter(from: node)
+        let excludedProperties = parseIgnoreParameter(from: node)
         let structProperties = parseProperties(from: memberBlock)
 
-        for ignoredProperty in ignoredProperties {
-            if structProperties.contains(where: { $0.0 == ignoredProperty }) == false {
+        for property in excludedProperties {
+            if structProperties.contains(where: { $0.0 == property }) == false {
                 context.diagnose(
                     Diagnostic(
                         node: declaration,
                         message: MacroExpansionErrorMessage(
-                            "Ignored property '\(ignoredProperty)' is not present in '\(attachedSymbol)'"
+                            "Excluded property '\(property)' is not present in '\(attachedSymbol)'"
                         )
                     )
                 )
@@ -56,26 +56,26 @@ public struct StubbableMacro: ExtensionMacro {
 
         let stubbedProperties = structProperties
             .map { (name, type) in
-                if ignoredProperties.contains(name) {
-                    StubbedProperty.for(ignoredPropertyName: name, type: type)
+                if excludedProperties.contains(name) {
+                    StubbedProperty.`for`(excludedProperty: name, type: type)
                 } else {
-                    StubbedProperty.for(propertyName: name, type: type, attachedSymbol: attachedSymbol)
+                    StubbedProperty.`for`(property: name, type: type, attachedSymbol: attachedSymbol)
                 }
             }
 
         let parameters = stubbedProperties
             .map { parameter in
-                if let parameterDefaultValue = parameter.parameterDefaultValue {
-                    "\(parameter.parameterName): \(parameter.parameterType) = \(parameterDefaultValue)"
+                if let parameterDefaultValue = parameter.defaultValue {
+                    "\(parameter.name): \(parameter.type) = \(parameterDefaultValue)"
                 } else {
-                    "\(parameter.parameterName): \(parameter.parameterType)"
+                    "\(parameter.name): \(parameter.type)"
                 }
             }
             .joined(separator: ",\n")
 
         let assignments = stubbedProperties
             .map { parameter in
-                "\(parameter.propertyName): \(parameter.propertyAssignment)"
+                "\(parameter.name): \(parameter.name)"
             }
             .joined(separator: ",\n")
 
@@ -94,7 +94,7 @@ public struct StubbableMacro: ExtensionMacro {
             """
 
         guard let extensionDecl = stubFunction.as(ExtensionDeclSyntax.self) else {
-            fatalError("Compiler bug :(")
+            fatalError("@Stubbable: Could not convert output to ExtensionDeclSyntax")
         }
 
         return [extensionDecl]
