@@ -29,7 +29,8 @@ struct User {
 }
 ```
 
-This will generate an extension that contains a static `stub` method, containing parameters and default values for every property in the type:
+This will generate an extension that contains a static `stub` method, containing parameters and default values
+for every property in the type:
 
 ```swift
 extension User {
@@ -55,7 +56,9 @@ extension User {
 
 ## Excluding properties
 
-Using the `exclude` parameter, you can specify properties that should not have default value in the stub. This can be useful if you want to enforce the call site to supply a value, or when a referenced property type does not conform to Stubbable.
+Using the `exclude` parameter, you can specify properties that should not have a default value in the stub.
+This can be useful if you want to enforce the call site to supply a value, or when a referenced property type
+does not implement Stubbable.
 
 Here we exclude the "id" and "company" properties, forcing the call site to supply a value for those parameters:
 
