@@ -58,7 +58,7 @@ public struct StubbableMacro: ExtensionMacro {
         let parameters = structProperties
             .map { (name, type) in
                 let defaultValue = excludedProperties.contains(name)
-                    ? aap(forExcludedProperty: name, type: type)
+                    ? defaultValue(forExcludedProperty: name, type: type)
                     : defaultValue(forProperty: name, type: type, attachedSymbol: attachedSymbol)
 
                 if let parameterDefaultValue = defaultValue {

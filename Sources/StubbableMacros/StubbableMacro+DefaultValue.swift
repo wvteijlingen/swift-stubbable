@@ -43,7 +43,7 @@ extension StubbableMacro {
         }
     }
 
-    static func aap(forExcludedProperty property: String, type: String) -> String? {
+    static func defaultValue(forExcludedProperty property: String, type: String) -> String? {
         type.suffix(1) == "?" ? "nil" : nil
     }
 }
