@@ -1,30 +1,10 @@
-struct StubbedProperty {
-    let name: String
-    let type: String
-    let defaultValue: String?
-
-    init(
-        name: String,
-        type: String,
-        defaultValue: String?
-    ) {
-        self.name = name
-        self.type = type
-        self.defaultValue = defaultValue
-    }
-}
-
-extension StubbedProperty {
-    static func `for`(property: String, type: String, attachedSymbol: String) -> StubbedProperty {
+extension StubbableMacro {
+    static func defaultValue(forProperty property: String, type: String, attachedSymbol: String) -> String? {
         let nonOptionalType = type.suffix(1) == "?" ? String(type.dropLast()) : type
 
         // TODO: Improve logic to detect dictionaries
         if nonOptionalType.starts(with: "[") && nonOptionalType.contains(":") && nonOptionalType.suffix(1) == "]" {
-            return StubbedProperty(
-                name: property,
-                type: type,
-                defaultValue: "[:]"
-            )
+            return "[:]"
         }
 
         // TODO: Improve logic to detect arrays
@@ -32,14 +12,10 @@ extension StubbedProperty {
             nonOptionalType.starts(with: "Array<") ||
             nonOptionalType.starts(with: "Set<")
         {
-            return StubbedProperty(
-                name: property,
-                type: type,
-                defaultValue: "[]"
-            )
+            return "[]"
         }
 
-        let parameterDefaultValue: String? = switch nonOptionalType {
+        return switch nonOptionalType {
         case "Int", "Int8", "Int16", "Int32", "Int64", "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
             "0"
         case "UUID":
@@ -65,19 +41,9 @@ extension StubbedProperty {
         default:
             ".stub()"
         }
-
-        return StubbedProperty(
-            name: property,
-            type: type,
-            defaultValue: parameterDefaultValue
-        )
     }
 
-    static func `for`(excludedProperty name: String, type: String) -> StubbedProperty {
-        if type.suffix(1) == "?" {
-            StubbedProperty(name: name, type: type, defaultValue: "nil")
-        } else {
-            StubbedProperty(name: name, type: type, defaultValue: nil)
-        }
+    static func aap(forExcludedProperty property: String, type: String) -> String? {
+        type.suffix(1) == "?" ? "nil" : nil
     }
 }

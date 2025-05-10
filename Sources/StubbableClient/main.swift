@@ -4,7 +4,7 @@ import Foundation
 @Stubbable
 class Bar {}
 
-@Stubbable(ignore: ["g"])
+@Stubbable(exclude: ["g"])
 struct Foo {
     let id: String
     let a: Int

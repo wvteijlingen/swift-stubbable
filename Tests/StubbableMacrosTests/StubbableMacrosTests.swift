@@ -13,7 +13,7 @@ final class StubbableMacrosTests: XCTestCase {
     func testMacro() throws {
         assertMacroExpansion(
             """
-            @Stubbable(ignore: ["id"])
+            @Stubbable(exclude: ["id"])
             struct Foo {
                 let id: String
                 let a: Int
@@ -45,24 +45,24 @@ final class StubbableMacrosTests: XCTestCase {
                 static func stub(
                     id: String,
                     a: Int = 0,
-                    b: String = "b",
+                    b: String = "b.\\(UUID().uuidString)",
                     c: Bool = false,
-                    d: URL = URL(string: "https://example.com/d")!,
+                    d: URL = URL(string: "https://example.com/d/\\(UUID().uuidString)")!,
                     e: Date? = Date(timeIntervalSince1970: 0),
                     f: [Int] = [],
-                    g: Bar? = nil,
+                    g: Bar? = .stub(),
                     h: Bar = .stub()
                 ) -> Foo {
                     Foo(
-                        id: String,
-                        a: Int,
-                        b: String,
-                        c: Bool,
-                        d: URL,
-                        e: Date?,
-                        f: [Int],
-                        g: Bar?,
-                        h: Bar
+                        id: id,
+                        a: a,
+                        b: b,
+                        c: c,
+                        d: d,
+                        e: e,
+                        f: f,
+                        g: g,
+                        h: h
                     )
                 }
                 #endif

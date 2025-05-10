@@ -12,6 +12,8 @@ public struct StubbableMacro: ExtensionMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
+        let excludedProperties = parseIgnoreParameter(from: node)
+
         let structDecl = declaration.as(StructDeclSyntax.self)
         let classDecl = declaration.as(ClassDeclSyntax.self)
         let attachedSymbol = structDecl?.name.text ?? classDecl?.name.text
@@ -38,7 +40,6 @@ public struct StubbableMacro: ExtensionMacro {
             return []
         }
 
-        let excludedProperties = parseIgnoreParameter(from: node)
         let structProperties = parseProperties(from: memberBlock)
 
         for property in excludedProperties {
@@ -54,26 +55,21 @@ public struct StubbableMacro: ExtensionMacro {
             }
         }
 
-        let stubbedProperties = structProperties
+        let parameters = structProperties
             .map { (name, type) in
-                if excludedProperties.contains(name) {
-                    StubbedProperty.`for`(excludedProperty: name, type: type)
-                } else {
-                    StubbedProperty.`for`(property: name, type: type, attachedSymbol: attachedSymbol)
-                }
-            }
+                let defaultValue = excludedProperties.contains(name)
+                    ? aap(forExcludedProperty: name, type: type)
+                    : defaultValue(forProperty: name, type: type, attachedSymbol: attachedSymbol)
 
-        let parameters = stubbedProperties
-            .map { parameter in
-                if let parameterDefaultValue = parameter.defaultValue {
-                    "\(parameter.name): \(parameter.type) = \(parameterDefaultValue)"
+                if let parameterDefaultValue = defaultValue {
+                    return "\(name): \(type) = \(parameterDefaultValue)"
                 } else {
-                    "\(parameter.name): \(parameter.type)"
+                    return "\(name): \(type)"
                 }
             }
             .joined(separator: ",\n")
 
-        let assignments = stubbedProperties
+        let assignments = structProperties
             .map { parameter in
                 "\(parameter.name): \(parameter.name)"
             }
@@ -120,7 +116,7 @@ public struct StubbableMacro: ExtensionMacro {
             }
     }
 
-    private static func parseProperties(from memberBlock: MemberBlockSyntax) -> [(String, String)] {
+    private static func parseProperties(from memberBlock: MemberBlockSyntax) -> [(name: String, type: String)] {
         memberBlock.members.compactMap { member -> (String, String)? in
             guard let variableDecl = member.decl.as(VariableDeclSyntax.self),
                   let binding = variableDecl.bindings.first,
