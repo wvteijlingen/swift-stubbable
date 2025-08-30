@@ -19,9 +19,9 @@ extension StubbableMacro {
         case "Int", "Int8", "Int16", "Int32", "Int64", "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
             "0"
         case "UUID":
-            "UUID().uuidString"
+            "UUID()"
         case "String":
-            "\"\(property).\\(UUID().uuidString)\""
+            "\"\(property)\""
         case "Character":
             String(type.prefix(1))
         case "Bool":
@@ -31,10 +31,10 @@ extension StubbableMacro {
         case "Float":
             "0.0"
         case "URL":
-            "URL(string: \"https://example.com/\(property)/\\(UUID().uuidString)\")!"
+            "URL(string: \"https://example.com/\(property)\")!"
         case "Date":
             "Date(timeIntervalSince1970: 0)"
-        case "Error":
+        case "Error", "NSError":
             "NSError(domain: \"\(attachedSymbol).\(property)\", code: 0, userInfo: nil)"
         case "Any", "AnyObject":
             nil

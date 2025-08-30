@@ -75,7 +75,7 @@ Will expand to:
 
 ```swift
 extension User {
-    #if STUBS_ENABLED
+    #if DEBUG
     static func stub(
         id: String,
         username: String = "username.\(UUID().uuidString)",

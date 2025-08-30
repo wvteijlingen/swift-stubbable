@@ -28,6 +28,7 @@ final class StubbableMacrosTests: XCTestCase {
             let m: [String: Bool]
             let n: Any
             let o: AnyObject
+            let p: UUID
         }
         """
 
@@ -40,13 +41,13 @@ final class StubbableMacrosTests: XCTestCase {
         \(fooDeclaration)
         
         extension Foo {
-            #if STUBS_ENABLED
+            #if DEBUG
             static func stub(
                 a: ExcludedPropertyType,
                 b: Int = 0,
-                c: String = "c.\\(UUID().uuidString)",
+                c: String = "c",
                 d: Bool = false,
-                e: URL = URL(string: "https://example.com/e/\\(UUID().uuidString)")!,
+                e: URL = URL(string: "https://example.com/e")!,
                 f: Date? = Date(timeIntervalSince1970: 0),
                 g: [Int] = [],
                 h: CustomType = .stub(),
@@ -56,7 +57,8 @@ final class StubbableMacrosTests: XCTestCase {
                 l: Set<Int> = [],
                 m: [String: Bool] = [:],
                 n: Any,
-                o: AnyObject
+                o: AnyObject,
+                p: UUID = UUID()
             ) -> Foo {
                 Foo(
                     a: a,
@@ -73,7 +75,8 @@ final class StubbableMacrosTests: XCTestCase {
                     l: l,
                     m: m,
                     n: n,
-                    o: o
+                    o: o,
+                    p: p
                 )
             }
             #endif
