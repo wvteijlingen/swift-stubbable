@@ -21,7 +21,7 @@ extension StubbableMacro {
         case "UUID":
             "UUID()"
         case "String":
-            "\(property)"
+            "\"\(property)\""
         case "Character":
             String(type.prefix(1))
         case "Bool":
