@@ -28,6 +28,7 @@ final class StubbableMacrosTests: XCTestCase {
             let m: [String: Bool]
             let n: Any
             let o: AnyObject
+            let p: UUID
         }
         """
 
@@ -56,7 +57,8 @@ final class StubbableMacrosTests: XCTestCase {
                 l: Set<Int> = [],
                 m: [String: Bool] = [:],
                 n: Any,
-                o: AnyObject
+                o: AnyObject,
+                p: UUID = UUID()
             ) -> Foo {
                 Foo(
                     a: a,
@@ -74,6 +76,7 @@ final class StubbableMacrosTests: XCTestCase {
                     m: m,
                     n: n,
                     o: o
+                    p: p
                 )
             }
             #endif
