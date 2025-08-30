@@ -77,7 +77,7 @@ public struct StubbableMacro: ExtensionMacro {
 
         let stubFunction: DeclSyntax = """
             extension \(raw: attachedSymbol) {
-                #if STUBS_ENABLED
+                #if DEBUG
                 static func stub(
                     \(raw: parameters)
                 ) -> \(raw: attachedSymbol) {

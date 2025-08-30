@@ -40,13 +40,13 @@ final class StubbableMacrosTests: XCTestCase {
         \(fooDeclaration)
         
         extension Foo {
-            #if STUBS_ENABLED
+            #if DEBUG
             static func stub(
                 a: ExcludedPropertyType,
                 b: Int = 0,
-                c: String = "c.\\(UUID().uuidString)",
+                c: String = "c",
                 d: Bool = false,
-                e: URL = URL(string: "https://example.com/e/\\(UUID().uuidString)")!,
+                e: URL = URL(string: "https://example.com/e")!,
                 f: Date? = Date(timeIntervalSince1970: 0),
                 g: [Int] = [],
                 h: CustomType = .stub(),
