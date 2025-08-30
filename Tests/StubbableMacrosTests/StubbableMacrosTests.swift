@@ -75,7 +75,7 @@ final class StubbableMacrosTests: XCTestCase {
                     l: l,
                     m: m,
                     n: n,
-                    o: o
+                    o: o,
                     p: p
                 )
             }
