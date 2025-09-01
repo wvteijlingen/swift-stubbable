@@ -30,14 +30,15 @@ struct User {
 ```
 
 This will generate an extension that contains a static `stub` method, containing parameters and default values
-for every property in the type:
+for every property in the type. The `stub` method is gated behind a `#if DEBUG` compiler condition, ensuring
+that stub code will not be included into a release build.
 
 ```swift
 extension User {
-    #if STUBS_ENABLED
+    #if DEBUG
     static func stub(
-        id: String = "id.\(UUID().uuidString)",
-        username: String = "username.\(UUID().uuidString)",
+        id: String = "id",
+        username: String = "username",
         age: Date? = Date(timeIntervalSince1970: 0),
         isAdmin: Bool = false,
         company: Company = .stub()
@@ -78,7 +79,7 @@ extension User {
     #if DEBUG
     static func stub(
         id: String,
-        username: String = "username.\(UUID().uuidString)",
+        username: String = "username",
         company: Company,
     ) -> User {
         User(
