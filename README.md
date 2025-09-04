@@ -91,3 +91,39 @@ extension User {
     #endif
 }
 ```
+
+## Custom defaults
+
+Using the `defaults` parameter, you can specify a custom default to use for a property. 
+
+Here we provide a custom default value for the  "id" property:
+
+
+```swift
+@Stubbable(defaults: ["id", "someCustomValue"])
+struct User {
+    let id: String
+    let username: String
+    let company: Company
+}
+```
+
+Will expand to:
+
+```swift
+extension User {
+    #if DEBUG
+    static func stub(
+        id: String = "someCustomValue",
+        username: String = "username",
+        company: Company,
+    ) -> User {
+        User(
+            id: id,
+            username: username,
+            company: company
+        )
+    }
+    #endif
+}
+```
