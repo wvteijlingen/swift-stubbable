@@ -29,11 +29,12 @@ final class StubbableMacrosTests: XCTestCase {
             let n: Any
             let o: AnyObject
             let p: UUID
+            let q: Int
         }
         """
 
         let source = """
-        @Stubbable(exclude: ["a"])
+        @Stubbable(exclude: ["a"], defaults: ["q": 999])
         \(fooDeclaration)
         """
 
@@ -58,7 +59,8 @@ final class StubbableMacrosTests: XCTestCase {
                 m: [String: Bool] = [:],
                 n: Any,
                 o: AnyObject,
-                p: UUID = UUID()
+                p: UUID = UUID(),
+                q: Int = 999
             ) -> Foo {
                 Foo(
                     a: a,
@@ -76,7 +78,8 @@ final class StubbableMacrosTests: XCTestCase {
                     m: m,
                     n: n,
                     o: o,
-                    p: p
+                    p: p,
+                    q: q
                 )
             }
             #endif
