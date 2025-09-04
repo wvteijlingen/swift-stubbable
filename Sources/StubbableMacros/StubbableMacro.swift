@@ -12,7 +12,8 @@ public struct StubbableMacro: ExtensionMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        let excludedProperties = parseIgnoreParameter(from: node)
+        let excludedProperties = parseExcludeParameter(from: node)
+        let defaults = parseDefaultsParameter(from: node)
 
         let structDecl = declaration.as(StructDeclSyntax.self)
         let classDecl = declaration.as(ClassDeclSyntax.self)
@@ -57,12 +58,16 @@ public struct StubbableMacro: ExtensionMacro {
 
         let parameters = structProperties
             .map { (name, type) in
-                let defaultValue = excludedProperties.contains(name)
-                    ? defaultValue(forExcludedProperty: name, type: type)
-                    : defaultValue(forProperty: name, type: type, attachedSymbol: attachedSymbol)
+                let defaultValue = if let customDefault = defaults[name] {
+                    customDefault
+                } else if excludedProperties.contains(name) {
+                    type.suffix(1) == "?" ? "nil" : nil
+                } else {
+                    defaultValue(forProperty: name, type: type, attachedSymbol: attachedSymbol)
+                }
 
-                if let parameterDefaultValue = defaultValue {
-                    return "\(name): \(type) = \(parameterDefaultValue)"
+                if let defaultValue {
+                    return "\(name): \(type) = \(defaultValue)"
                 } else {
                     return "\(name): \(type)"
                 }
@@ -96,9 +101,9 @@ public struct StubbableMacro: ExtensionMacro {
         return [extensionDecl]
     }
 
-    private static func parseIgnoreParameter(from node: AttributeSyntax) -> [String] {
+    private static func parseExcludeParameter(from node: AttributeSyntax) -> [String] {
         guard case let .argumentList(arguments) = node.arguments,
-              let argument = arguments.first,
+              let argument = arguments.first(where: { $0.label?.text == "exclude" }),
               let expression = argument.expression.as(ArrayExprSyntax.self)
         else {
             return []
@@ -114,6 +119,36 @@ public struct StubbableMacro: ExtensionMacro {
                     .first?
                     .description
             }
+    }
+
+    private static func parseDefaultsParameter(from node: AttributeSyntax) -> [String: String] {
+        guard case let .argumentList(arguments) = node.arguments,
+              let argument = arguments.first(where: { $0.label?.text == "defaults" }),
+              let expression = argument.expression.as(DictionaryExprSyntax.self)
+        else {
+            return [:]
+        }
+
+        var defaults: [String: String] = [:]
+
+        expression.content
+            .children(viewMode: .sourceAccurate)
+            .forEach { syntax in
+                let key = syntax.as(DictionaryElementSyntax.self)?
+                        .key
+                        .as(StringLiteralExprSyntax.self)?
+                        .segments
+                        .first?
+                        .description
+
+                let value = syntax.as(DictionaryElementSyntax.self)?.value.trimmed.description
+
+                if let key, let value {
+                    defaults[key] = value
+                }
+            }
+
+        return defaults
     }
 
     private static func parseProperties(from memberBlock: MemberBlockSyntax) -> [(name: String, type: String)] {

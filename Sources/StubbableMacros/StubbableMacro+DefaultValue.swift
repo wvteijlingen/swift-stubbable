@@ -42,8 +42,4 @@ extension StubbableMacro {
             ".stub()"
         }
     }
-
-    static func defaultValue(forExcludedProperty property: String, type: String) -> String? {
-        type.suffix(1) == "?" ? "nil" : nil
-    }
 }
