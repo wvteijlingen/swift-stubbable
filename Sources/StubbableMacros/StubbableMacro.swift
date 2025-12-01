@@ -29,8 +29,8 @@ public struct StubbableMacro: ExtensionMacro {
         }
 
         let structProperties = parseProperties(from: memberBlock)
-        let stubInitializer = generateStubInitializer(properties: structProperties)
-
+        let protocolConformances = excludedProperties.isEmpty || structProperties.isEmpty ? ": _FullyStubbable" : ""
+        let stubInitializer = structProperties.isEmpty ? "" : generateStubInitializer(properties: structProperties)
         let stubMethod = generateStubMethod(
             properties: structProperties,
             defaults: defaults,
@@ -39,7 +39,7 @@ public struct StubbableMacro: ExtensionMacro {
         )
 
         let extensionSyntax: DeclSyntax = """
-            extension \(raw: type.description): _FullyStubbable {
+            extension \(raw: type.description)\(raw: protocolConformances) {
                 #if DEBUG
                 \(raw: stubInitializer)
                 
@@ -58,9 +58,11 @@ public struct StubbableMacro: ExtensionMacro {
         return [extensionDecl]
     }
 
-    private static func generateStubInitializer(properties: [(name: String, type: String)]) -> DeclSyntax {
+    private static func generateStubInitializer(
+        properties: [(name: String, type: String, initializer: String?)]
+    ) -> DeclSyntax {
         let parameters = properties
-            .map { (name, type) in
+            .map { (name, type, _) in
                 "_stub_\(name): \(type)"
             }
             .joined(separator: ",\n")
@@ -83,7 +85,7 @@ public struct StubbableMacro: ExtensionMacro {
     }
 
     private static func generateStubMethod(
-        properties: [(name: String, type: String)],
+        properties: [(name: String, type: String, initializer: String?)],
         defaults:  [String: String],
         excludedProperties: [String],
         attachedSymbol: String
@@ -92,11 +94,14 @@ public struct StubbableMacro: ExtensionMacro {
             .map { (index, element) in
                 let name = element.name
                 let type = element.type
+                let initializer = element.initializer
 
                 let defaultValue: String? = if let customDefault = defaults[name] {
                     customDefault
+                } else if let initializer {
+                    initializer
                 } else if !excludedProperties.contains(name) {
-                    "StubbableConfig.stubber.value(forType: \(type).self, property: \"\(name)\", index: \(index), symbol: \"\(attachedSymbol)\")"
+                    "StubbableConfig.value(forType: \(type).self, property: \"\(name)\", index: \(index), symbol: \"\(attachedSymbol)\")"
                 } else {
                     nil
                 }
@@ -178,17 +183,26 @@ public struct StubbableMacro: ExtensionMacro {
         return defaults
     }
 
-    private static func parseProperties(from memberBlock: MemberBlockSyntax) -> [(name: String, type: String)] {
-        memberBlock.members.compactMap { member -> (String, String)? in
+    private static func parseProperties(from memberBlock: MemberBlockSyntax) -> [(
+        name: String,
+        type: String,
+        initializer: String?
+    )] {
+        memberBlock.members.compactMap { member in
             guard let variableDecl = member.decl.as(VariableDeclSyntax.self),
                   let binding = variableDecl.bindings.first,
                   let identifier = binding.pattern.as(IdentifierPatternSyntax.self),
-                  let typeAnnotation = binding.typeAnnotation
+                  let typeAnnotation = binding.typeAnnotation,
+                  binding.accessorBlock == nil // Ignore computed properties
             else {
                 return nil
             }
 
-            return (identifier.identifier.text, typeAnnotation.type.description)
+            return (
+                identifier.identifier.text,
+                typeAnnotation.type.description,
+                binding.initializer?.value.description
+            )
         }
     }
 }

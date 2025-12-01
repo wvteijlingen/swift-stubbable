@@ -83,15 +83,15 @@ provides a value for our custom `Company` type.
 
 ```swift
 extension StubbableConfig {
-    func value(forType type: String.Type, property: String, index: Int, symbol: String) -> String {
+    static func value(forType type: String.Type, property: String, index: Int, symbol: String) -> String {
         "customDefaultString"
     }
     
-    func value<T>(forType type: T.Type, property: String, index: Int, symbol: String) -> T where T: SignedInteger {
+    static func value<T: SignedInteger>(forType type: T.Type, property: String, index: Int, symbol: String) -> T {
         10
     }
     
-    func value(forType type: Company, property: String, index: Int, symbol: String) -> Bar {
+    static func value(forType type: Company, property: String, index: Int, symbol: String) -> Bar {
         Company(name: "ACME")
     }
 }
@@ -113,3 +113,8 @@ struct User {
     let company: Company
 }
 ```
+
+
+## Known issues
+
+- Properties are only included in the `.stub` method when they have an explicit type annotation.
