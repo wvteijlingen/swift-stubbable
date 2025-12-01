@@ -14,21 +14,8 @@ public struct StubbableMacro: ExtensionMacro {
     ) throws -> [ExtensionDeclSyntax] {
         let excludedProperties = parseExcludeParameter(from: node)
         let defaults = parseDefaultsParameter(from: node)
-
         let structDecl = declaration.as(StructDeclSyntax.self)
         let classDecl = declaration.as(ClassDeclSyntax.self)
-        let attachedSymbol = structDecl?.name.text ?? classDecl?.name.text
-
-        guard let attachedSymbol else {
-            context.diagnose(
-                Diagnostic(
-                    node: declaration,
-                    message: MacroExpansionErrorMessage("Macro error: could not extract type name")
-                )
-            )
-
-            return []
-        }
 
         guard let memberBlock = structDecl?.memberBlock ?? classDecl?.memberBlock else {
             context.diagnose(
@@ -42,28 +29,76 @@ public struct StubbableMacro: ExtensionMacro {
         }
 
         let structProperties = parseProperties(from: memberBlock)
+        let stubInitializer = generateStubInitializer(properties: structProperties)
 
-        for property in excludedProperties {
-            if structProperties.contains(where: { $0.0 == property }) == false {
-                context.diagnose(
-                    Diagnostic(
-                        node: declaration,
-                        message: MacroExpansionErrorMessage(
-                            "Excluded property '\(property)' is not present in '\(attachedSymbol)'"
-                        )
-                    )
-                )
+        let stubMethod = generateStubMethod(
+            properties: structProperties,
+            defaults: defaults,
+            excludedProperties: excludedProperties,
+            attachedSymbol: type.description
+        )
+
+        let extensionSyntax: DeclSyntax = """
+            extension \(raw: type.description): _FullyStubbable {
+                #if DEBUG
+                \(raw: stubInitializer)
+                
+                \(raw: stubMethod)
+            
+                // Implementation of _FullyStubbable
+                static func _stub() -> Self { .stub() }
+                #endif
             }
+            """
+
+        guard let extensionDecl = extensionSyntax.as(ExtensionDeclSyntax.self) else {
+            fatalError("@Stubbable: Could not convert output to ExtensionDeclSyntax")
         }
 
-        let parameters = structProperties
+        return [extensionDecl]
+    }
+
+    private static func generateStubInitializer(properties: [(name: String, type: String)]) -> DeclSyntax {
+        let parameters = properties
             .map { (name, type) in
-                let defaultValue = if let customDefault = defaults[name] {
+                "_stub_\(name): \(type)"
+            }
+            .joined(separator: ",\n")
+
+        let assignments = properties
+            .map { parameter in
+                "self.\(parameter.name) = _stub_\(parameter.name)"
+            }
+            .joined(separator: "\n")
+
+        let syntax: DeclSyntax = """
+            private init(
+                \(raw: parameters)
+            ) {
+                \(raw: assignments)
+            }
+            """
+
+        return syntax
+    }
+
+    private static func generateStubMethod(
+        properties: [(name: String, type: String)],
+        defaults:  [String: String],
+        excludedProperties: [String],
+        attachedSymbol: String
+    ) -> DeclSyntax {
+        let parameters = properties.enumerated()
+            .map { (index, element) in
+                let name = element.name
+                let type = element.type
+
+                let defaultValue: String? = if let customDefault = defaults[name] {
                     customDefault
-                } else if excludedProperties.contains(name) {
-                    type.suffix(1) == "?" ? "nil" : nil
+                } else if !excludedProperties.contains(name) {
+                    "StubbableConfig.stubber.value(forType: \(type).self, property: \"\(name)\", index: \(index), symbol: \"\(attachedSymbol)\")"
                 } else {
-                    defaultValue(forProperty: name, type: type, attachedSymbol: attachedSymbol)
+                    nil
                 }
 
                 if let defaultValue {
@@ -74,31 +109,23 @@ public struct StubbableMacro: ExtensionMacro {
             }
             .joined(separator: ",\n")
 
-        let assignments = structProperties
+        let assignments = properties
             .map { parameter in
-                "\(parameter.name): \(parameter.name)"
+                "_stub_\(parameter.name): \(parameter.name)"
             }
             .joined(separator: ",\n")
 
-        let stubFunction: DeclSyntax = """
-            extension \(raw: attachedSymbol) {
-                #if DEBUG
-                static func stub(
-                    \(raw: parameters)
-                ) -> \(raw: attachedSymbol) {
-                    \(raw: attachedSymbol)(
-                        \(raw: assignments)
-                    )
-                }
-                #endif
+        let syntax: DeclSyntax = """
+            static func stub(
+                \(raw: parameters)
+            ) -> \(raw: attachedSymbol) {
+                \(raw: attachedSymbol)(
+                    \(raw: assignments)
+                )
             }
-            """
+        """
 
-        guard let extensionDecl = stubFunction.as(ExtensionDeclSyntax.self) else {
-            fatalError("@Stubbable: Could not convert output to ExtensionDeclSyntax")
-        }
-
-        return [extensionDecl]
+        return syntax
     }
 
     private static func parseExcludeParameter(from node: AttributeSyntax) -> [String] {

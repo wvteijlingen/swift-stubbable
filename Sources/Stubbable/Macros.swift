@@ -1,4 +1,4 @@
-@attached(extension, names: arbitrary)
+@attached(extension, conformances: _FullyStubbable, names: arbitrary)
 public macro Stubbable(
     exclude: [String] = [],
     defaults: [String: Any] = [:]
