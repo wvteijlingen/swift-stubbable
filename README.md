@@ -83,15 +83,15 @@ provides a value for our custom `Company` type.
 
 ```swift
 extension Stubber {
-    static func value(_ type: String.Type, _ property: String, index: Int, _ symbol: String) -> String {
+    static func value(_ type: String.Type, _ property: String, _ index: Int, _ symbol: String) -> String {
         "customDefaultString"
     }
     
-    static func value<T: SignedInteger>(_ type: T.Type, _ property: String, index: Int, _ symbol: String) -> T {
+    static func value<T: SignedInteger>(_ type: T.Type, _ property: String, _ index: Int, _ symbol: String) -> T {
         10
     }
     
-    static func value(_ type: Company, _ property: String, index: Int, _ symbol: String) -> Bar {
+    static func value(_ type: Company, _ property: String, _ index: Int, _ symbol: String) -> Bar {
         Company(name: "ACME")
     }
 }
@@ -117,4 +117,5 @@ struct User {
 
 ## Known issues
 
-- Properties are only included in the `.stub` method when they have an explicit type annotation.
+- `let` properties with a default value are included in the `.stub` method, causing compilation errors
+- Properties are only included in the `.stub` method when they have an explicit type annotation

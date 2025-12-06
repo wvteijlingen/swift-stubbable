@@ -193,6 +193,7 @@ public struct StubbableMacro: ExtensionMacro {
                   let identifier = binding.pattern.as(IdentifierPatternSyntax.self),
                   let typeAnnotation = binding.typeAnnotation,
                   binding.accessorBlock == nil // Ignore computed properties
+                  // TODO: Ignore let properties with a default value
             else {
                 return nil
             }
