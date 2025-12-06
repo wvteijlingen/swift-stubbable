@@ -66,14 +66,14 @@ globally for all stubs or individually for a single stubbable type.
 
 ### Configuring global defaults
 
-You can extend the `StubbableConfig` type to provide default values by adding methods that provide a value for a
+You can extend the `Stubber` type to provide default values by adding methods that provide a value for a
 specific type.
 
 Each method takes following parameter:
-- `type`: The type for which to provide a value.
-- `property`: The name of the stubbed property.
-- `index`: The index of the stubbed property. This can be useful to provide unique values per property.
-- `symbol`: The name of the stubbed struct or class.
+- `_ type: [type]`: The type for which to provide a value.
+- `_ property: String`: The name of the stubbed property.
+- `_ index: Int`: The index of the stubbed property. This can be useful to provide unique values per property.
+- `_ symbol: String`: The name of the stubbed struct or class.
 
 The following code snippet configures overrides the default values for the `String` and `SignedInteger` type. It also
 provides a value for our custom `Company` type. 
@@ -82,16 +82,16 @@ provides a value for our custom `Company` type.
 (Int, Int16, etc.)
 
 ```swift
-extension StubbableConfig {
-    static func value(forType type: String.Type, property: String, index: Int, symbol: String) -> String {
+extension Stubber {
+    static func value(_ type: String.Type, _ property: String, index: Int, _ symbol: String) -> String {
         "customDefaultString"
     }
     
-    static func value<T: SignedInteger>(forType type: T.Type, property: String, index: Int, symbol: String) -> T {
+    static func value<T: SignedInteger>(_ type: T.Type, _ property: String, index: Int, _ symbol: String) -> T {
         10
     }
     
-    static func value(forType type: Company, property: String, index: Int, symbol: String) -> Bar {
+    static func value(_ type: Company, _ property: String, index: Int, _ symbol: String) -> Bar {
         Company(name: "ACME")
     }
 }
