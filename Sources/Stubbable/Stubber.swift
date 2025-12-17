@@ -55,12 +55,12 @@ public struct Stubber: Sendable {
 
     // MARK: - Character
 
-    public static func value(_ type: Character.Type, _ property: String, _ index: Int, _ symbol: String) -> String {
-        String(property.prefix(1))
+    public static func value(_ type: Character.Type, _ property: String, _ index: Int, _ symbol: String) -> Character {
+        "c"
     }
 
-    public static func value(_ type: Character?.Type, _ property: String, _ index: Int, _ symbol: String) -> String {
-        String(property.prefix(1))
+    public static func value(_ type: Character?.Type, _ property: String, _ index: Int, _ symbol: String) -> Character {
+        "c"
     }
 
     // MARK: - Bool
